@@ -44,8 +44,23 @@ def get_tier_division(summonerId):
     return tier_division
 
 
+def prettyfy_ranks(ranks):
+    stringy = '\n'
+    for item in ranks:
+        if item[1] == 'Unranked':
+            stringy += '\t%s: %s\n' % (item[0], item[1])
+        else:
+            stringy += '\t%s: %s %s\n' % (item[0], item[1], item[2])
+    return stringy
+
+
+# Making sure it doesn't bomb if your discord name doesn't match your IGN
 def get_match_ranks(summonerName):
-    id = get_summonerId_from_name(summonerName)
+    try:
+        id = get_summonerId_from_name(summonerName)
+    except riotwatcher.LoLException:
+        return "No summoner found with name: "
+
     players = get_match_players(id)
 
     ranks = []
@@ -56,11 +71,3 @@ def get_match_ranks(summonerName):
     return pretty_ranks
 
 
-def prettyfy_ranks(ranks):
-    stringy = '\n'
-    for item in ranks:
-        if item[1] == 'Unranked':
-            stringy += '\t%s: %s\n' % (item[0], item[1])
-        else:
-            stringy += '\t%s: %s %s\n' % (item[0], item[1], item[2])
-    return stringy

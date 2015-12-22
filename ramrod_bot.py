@@ -14,12 +14,17 @@ def on_message(message):
     if message.content.startswith('!hello'):
         client.send_message(message.channel, 'Hello {}!'.format(message.author.mention()))
 
+    # hehe
     if message.content.startswith('is Will awesome?'):
         client.send_message(message.channel, 'Of course he is {}!'.format(message.author.mention()))
 
+    # As long as your discord name is the same as your IGN this will work.
     if message.content.startswith('!currentgame'):
-        temp = rito.get_match_ranks('listenlouder')
-        client.send_message(message.channel, 'Current player tiers and divisions: {}'.format(temp))
+        temp = rito.get_match_ranks(message.author)
+        if temp.startswith('No summoner found with name: '):
+            client.send_message(message.channel, 'No Summoner found with name: {}'.format(message.author))
+        else:
+            client.send_message(message.channel, 'Current player tiers and divisions: {}'.format(temp))
 
 
 @client.event
