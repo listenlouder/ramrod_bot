@@ -14,7 +14,7 @@ def on_message(message):
     if message.content.startswith('!hello'):
         client.send_message(message.channel, 'Hello {}!'.format(message.author.mention()))
 
-    if message.content.startswith('is Sam gay?'):
+    if message.content.startswith('is Will awesome?'):
         client.send_message(message.channel, 'Of course he is {}!'.format(message.author.mention()))
 
     if message.content.startswith('!currentgame'):
