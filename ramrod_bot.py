@@ -20,9 +20,11 @@ def on_message(message):
 
     # As long as your discord name is the same as your IGN this will work.
     if message.content.startswith('!currentgame'):
-        temp = rito.get_match_ranks(message.author)
+        temp = rito.get_match_ranks(str(message.author))
         if temp.startswith('No summoner found with name: '):
             client.send_message(message.channel, 'No Summoner found with name: {}'.format(message.author))
+        elif temp.startswith('Summoner is not in a game.'):
+            client.send_message(message.channel, 'Summoner is not in a game.')
         else:
             client.send_message(message.channel, 'Current player tiers and divisions: {}'.format(temp))
 
