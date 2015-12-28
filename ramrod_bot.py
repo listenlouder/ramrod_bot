@@ -1,5 +1,6 @@
 import discord
 import riot_api as rito
+import random
 
 client = discord.Client()
 client.login('email', 'password')
@@ -27,6 +28,13 @@ def on_message(message):
             client.send_message(message.channel, 'Summoner is not in a game.')
         else:
             client.send_message(message.channel, 'Current player tiers and divisions: {}'.format(temp))
+
+    if message.content.startswith('/roll'):
+        roll = random.randint(1,100)
+        client.send_message(message.channel, '{} rolls {}'.format(message.author, roll))
+
+    if message.content.startswith('http://i.imgur.com/'):
+        client.send_message(message.channel, 'Dank meme {}'.format(message.author.mention()))
 
 
 @client.event
