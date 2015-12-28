@@ -1,23 +1,13 @@
 import riotwatcher
 from riotwatcher import RiotWatcher
 
-w = RiotWatcher('api-key')
+w = RiotWatcher('api_key')
 
 
 def get_summonerId_from_name(summonerName):
     print "Getting info for summonerName: %s..." % summonerName
     summoner = w.get_summoner(name=summonerName)
     return summoner['id']
-
-
-def get_unranked(summonerIds):
-    print "Getting info for summonerID: %s..." % summonerIds
-    summoners = w.get_summoners(names=None, ids=summonerIds)
-    names = []
-    for item in summoners.values():
-        name = item.get('name')
-        names.append(name)
-    return names
 
 
 def get_match_players(summonerId):
@@ -39,13 +29,18 @@ def get_tier_division(summonerId):
     return leagues
 
 
+def get_unranked(summonerIds):
+    print "Getting info for unranked summonerID: %s..." % summonerIds
+    summoners = w.get_summoner_name(summonerIds)
+    return summoners
+
+
 def parse_leagues(players, leagues):
     ranks = []
-    unranked_ids = []
     for player in players:
-        league = leagues.get(str(player[0]), 'Unranked')
+        league = leagues.get(str(player[0]), 'UNRANKED')
 
-        if league != 'Unranked':
+        if league != 'UNRANKED':
             for item in league:
                 if item.get('queue') == 'RANKED_SOLO_5x5':
 
@@ -56,61 +51,76 @@ def parse_leagues(players, leagues):
                         for thingy in item.get('entries'):
                             division = thingy.get('division')
                             name = thingy.get('playerOrTeamName')
+                            sid = thingy.get('playerOrTeamId')
 
-            tier_division = [str(name), str(tier), str(division), player[1]]
-            ranks.append(tier_division)
-        else:
-            unranked_ids.append(str(player[0]))
-
-    if len(unranked_ids) != 0:
-        unranked_names = get_unranked(unranked_ids)
-        for name in unranked_names:
-            tier_division = [name, 'Unranked', None, player[1]]
+            tier_division = [str(sid), str(name), str(tier), str(division)]
             ranks.append(tier_division)
 
     return ranks
 
 
-# Formats everything all pretty like for chat
-def prettyfy_ranks(ranks):
+def prettyfy_ranks(player_list):
     stringy = '\nTeam 1:\n'
-    for item in ranks:
-        if item[3] == 100:
-            if item[1] == 'Unranked':
-                stringy += '\t%s: %s\n' % (item[0], item[1])
+    for key,value in player_list.iteritems():
+        if value['team'] == 100:
+            if value['tier'] == 'UNRANKED':
+                stringy += '\t%s: %s\n' % (value['name'], value['tier'])
             else:
-                stringy += '\t%s: %s %s\n' % (item[0], item[1], item[2])
+                stringy += '\t%s: %s %s\n' % (value['name'], value['tier'], value['division'])
 
     stringy += '\nTeam 2:\n'
-    for item in ranks:
-        if item[3] == 200:
-            if item[1] == 'Unranked':
-                stringy += '\t%s: %s\n' % (item[0], item[1])
+    for key,value in player_list.iteritems():
+        if value['team'] == 200:
+            if value['tier'] == 'UNRANKED':
+                stringy += '\t%s: %s\n' % (value['name'], value['tier'])
             else:
-                stringy += '\t%s: %s %s\n' % (item[0], item[1], item[2])
+                stringy += '\t%s: %s %s\n' % (value['name'], value['tier'], value['division'])
 
     return stringy
 
 
-# Making sure it doesn't bomb if your discord name doesn't match your IGN
 def get_match_ranks(summonerName):
+    player_list = {}
+
     try:
         print "Getting match info for %s..." % summonerName
-        id = get_summonerId_from_name(summonerName)
+        sid = get_summonerId_from_name(summonerName)
     except riotwatcher.LoLException:
         return "No summoner found with name: "
 
     try:
-        players = get_match_players(id)
+        players = get_match_players(sid)
     except riotwatcher.LoLException:
         return "Summoner is not in a game."
 
-    players_list = ''
     for player in players:
-        players_list += str(player[0]) + ','
+        player_list[str(player[0])] = {'name': None, 'tier': 'UNRANKED', 'division': None, 'team': player[1]}
 
-    ranks = parse_leagues(players, get_tier_division(players_list))
+    temp = player_list.keys()
+    id_list = ''
+    for x in temp:
+        id_list += str(x) + ','
 
-    pretty_ranks = prettyfy_ranks(ranks)
+    ranks = parse_leagues(players, get_tier_division(id_list))
+
+    for x in ranks:
+        info = player_list[x[0]]
+        info['name'] = x[1]
+        info['tier'] = x[2]
+        info['division'] = x[3]
+
+    unranked_ids = []
+    for key, value in player_list.iteritems():
+        if value['tier'] == 'UNRANKED':
+            unranked_ids.append(str(key))
+
+    if len(unranked_ids) > 0:
+        unranked_info = get_unranked(unranked_ids)
+
+        for key, value in unranked_info.iteritems():
+            temp = player_list[key]
+            temp['name'] = value
+
+    pretty_ranks = prettyfy_ranks(player_list)
     print "Done!"
     return pretty_ranks
