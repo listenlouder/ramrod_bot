@@ -2,6 +2,13 @@ import discord
 import riot_api as rito
 import random
 from giphypop import screensaver
+import logging
+import cleverbot
+
+
+logging.basicConfig(level=logging.INFO)
+
+cb1 = cleverbot.Cleverbot()
 
 client = discord.Client()
 client.login('email', 'password')
@@ -23,7 +30,6 @@ def on_message(message):
     # LoLNexus lite in chat
     if message.content.startswith('!currentgame'):
         summoner = message.content[13:]
-        print summoner
         if len(summoner) < 1:
             summoner = str(message.author)
 
@@ -40,8 +46,10 @@ def on_message(message):
         client.send_message(message.channel, '{} rolls {}'.format(message.author, roll))
 
     if message.content.startswith('http://i.imgur.com/'):
-        client.send_message(message.channel, 'Dank meme {}'.format(message.author.mention()))
-    # Random gif using giphy api
+        rng = random.randint(1, 3)
+        if rng == 1:
+            client.send_message(message.channel, 'Dank meme {}'.format(message.author.mention()))
+    # Random gif using giphy: https://github.com/shaunduncan/giphypop
     if message.content.startswith('!gif'):
         search_term = message.content[5:]
         gif = screensaver(search_term)
@@ -49,6 +57,10 @@ def on_message(message):
     # Need to find a way to auto update this as new methods are added
     if message.content.startswith('!help'):
         client.send_message(message.channel, 'Current commands: !hello, !currentgame, /roll, !gif')
+    # Uses cleverbot for mentions: https://github.com/folz/cleverbot.py
+    if client.user in message.mentions:
+        new_content = message.content.replace('<@{}>'.format(client.user.id), '')
+        client.send_message(message.channel, '{}'.format(cb1.ask(new_content)))
 
 
 @client.event
@@ -58,22 +70,18 @@ def on_member_join(member):
 
 
 @client.event
-def on_status(member, arg2, status):
-    channels = member.server.channels
-    new_status = None
-    # Because it says offline when someone joins and ditto with the inverse...
-    if status == 'offline':
-        new_status = 'online'
-    elif status == 'online':
-        new_status = 'offline'
-    # We only care about online/offline
-    if new_status is not None:
-        client.send_message(channels[0], '{} is now {}'.format(member.name, status, tts=True))
-        # tts doesn't appear to work sometimes
-    else:
-        print status
-
-    print arg2  # This might be game id? IDK
+def on_member_update(before, after):
+    old_status = before.status
+    new_status = after.status
+    old_game = before.game
+    new_game = after.game
+    # Announces when someone comes online or starts playing a game
+    if old_status != new_status:
+        if new_status == 'online' and old_status != 'idle':
+            client.send_message(after.server.channels[0], '%s is now %s' % (after.name, new_status))
+    elif old_game != new_game:
+        if new_game is not None:
+            client.send_message(after.server.channels[0], '%s is now playing %s' % (after.name, new_game))
 
 
 @client.event
