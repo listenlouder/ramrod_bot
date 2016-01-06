@@ -53,7 +53,10 @@ def on_message(message):
     if message.content.startswith('!gif'):
         search_term = message.content[5:]
         gif = screensaver(search_term)
-        client.send_message(message.channel, '#{} {}'.format(search_term, gif['url']))
+        try:
+            client.send_message(message.channel, '#{} {}'.format(search_term, gif['url']))
+        except TypeError:
+            client.send_message(message.channel, 'No gif found for {}'.format(search_term))
     # Need to find a way to auto update this as new methods are added
     if message.content.startswith('!help'):
         client.send_message(message.channel, 'Current commands: !hello, !currentgame, /roll, !gif')
@@ -78,10 +81,10 @@ def on_member_update(before, after):
     # Announces when someone comes online or starts playing a game
     if old_status != new_status:
         if new_status == 'online' and old_status != 'idle':
-            client.send_message(after.server.channels[0], '%s is now %s' % (after.name, new_status))
+            client.send_message(after.server.channels[0], '%s is now %s' % (after.name, new_status), tts=True)
     elif old_game != new_game:
         if new_game is not None:
-            client.send_message(after.server.channels[0], '%s is now playing %s' % (after.name, new_game))
+            client.send_message(after.server.channels[0], '%s is now playing %s' % (after.name, new_game), tts=True)
 
 
 @client.event
