@@ -54,7 +54,10 @@ def on_message(message):
     if message.content.startswith('!gif'):
         search_term = message.content[5:]
         gif = screensaver(search_term)
-        client.send_message(message.channel, '#{} {}'.format(search_term, gif['url']))
+        try:
+            client.send_message(message.channel, '#{} {}'.format(search_term, gif['url']))
+        except TypeError:
+            client.send_message(message.channel, 'No gif found for {}'.format(search_term))
 
     # Ultimate bravery in chat
     if message.content.startswith('!bravery'):
@@ -100,13 +103,6 @@ def on_member_update(before, after):
     elif old_game != new_game:
         if new_game is not None:
             client.send_message(after.server.channels[0], '%s is now playing %s' % (after.name, new_game))
-
-    # game_ids = get_all_members(after.server)
-    # for game in game_ids:
-    #     if game[1].count() >= 2:
-    #         new_channel = client.create_channel(after.server, game, type='voice')
-    #         invite = client.create_invite(new_channel)
-
 
 @client.event
 def on_ready():
