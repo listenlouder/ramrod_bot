@@ -49,14 +49,32 @@ def on_message(message):
         rng = random.randint(1, 3)
         if rng == 1:
             client.send_message(message.channel, 'Dank meme {}'.format(message.author.mention()))
+
     # Random gif using giphy: https://github.com/shaunduncan/giphypop
     if message.content.startswith('!gif'):
         search_term = message.content[5:]
         gif = screensaver(search_term)
         client.send_message(message.channel, '#{} {}'.format(search_term, gif['url']))
+
+    # Ultimate bravery in chat
+    if message.content.startswith('!bravery'):
+        build = None
+        map = message.content[9:]
+        if map == '' or map == "Summoner's Rift":
+            build = rito.ultimate_bravery(11)
+        elif map == 'Twisted Treeline':
+            build = rito.ultimate_bravery(10)
+        elif map == 'Howling Abyss':
+            build = rito.ultimate_bravery(12)
+        else:
+            client.send_message(message.channel, "Please specify map: Summoner's Rift, Twisted Treeline, or Howling Abyss")
+        if build is not None:
+            client.send_message(message.channel, '{}: {}'.format(message.author, build))
+
     # Need to find a way to auto update this as new methods are added
     if message.content.startswith('!help'):
-        client.send_message(message.channel, 'Current commands: !hello, !currentgame, /roll, !gif')
+        client.send_message(message.channel, 'Current commands: !hello, !currentgame, /roll, !gif, !bravery')
+
     # Uses cleverbot for mentions: https://github.com/folz/cleverbot.py
     if client.user in message.mentions:
         new_content = message.content.replace('<@{}>'.format(client.user.id), '')
@@ -82,6 +100,12 @@ def on_member_update(before, after):
     elif old_game != new_game:
         if new_game is not None:
             client.send_message(after.server.channels[0], '%s is now playing %s' % (after.name, new_game))
+
+    # game_ids = get_all_members(after.server)
+    # for game in game_ids:
+    #     if game[1].count() >= 2:
+    #         new_channel = client.create_channel(after.server, game, type='voice')
+    #         invite = client.create_invite(new_channel)
 
 
 @client.event

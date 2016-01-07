@@ -1,12 +1,13 @@
 import riotwatcher
 from riotwatcher import RiotWatcher
 import json
+from random import randint
 
 w = RiotWatcher('api_key')
 
 # Static champion data from riot.
 with open('Resources/champions.json') as data_file:
-        Data = json.load(data_file)
+    Champs = json.load(data_file)
 
 
 def get_summonerId_from_name(summonerName):
@@ -15,9 +16,9 @@ def get_summonerId_from_name(summonerName):
     return summoner['id']
 
 
-def get_champion(champ_id, data):
+def get_champion(champ_id, champ_data):
     champion = ''
-    for key, value in data['data'].iteritems():
+    for key, value in champ_data['data'].iteritems():
         if value['id'] == champ_id:
             champion = key
 
@@ -39,7 +40,7 @@ def get_match_players(summonerId):
             teamId = item.get('teamId')
         if item.get('championId') is not None:
             champId = item.get('championId')
-            champ_name = get_champion(champId, Data)
+            champ_name = get_champion(champId, Champs)
         players.append([playerId, teamId, champ_name])
 
     return players
@@ -146,3 +147,141 @@ def get_match_ranks(summonerName):
     pretty_ranks = prettyfy_ranks(player_list)
     print "Done!"
     return pretty_ranks
+
+######################################################################
+# Start of Ultimate Bravery
+######################################################################
+
+# structure: {player_name: { champ: 'champ', masteries: [masteries], spells: [spells], items: [items]}
+
+with open('Resources/items.json') as data_file2:
+    Items = json.load(data_file2)
+
+with open('Resources/summoner_spells.json') as data_file3:
+    Spells = json.load(data_file3)
+
+
+def rand_champ(champ_data):
+    champ_list = champ_data['data']
+    names = []
+    for key, value in champ_list.iteritems():
+        name = value.get('name')
+        names.append(name)
+
+    play_champ = names[randint(0,len(names)-1)]
+    return play_champ
+
+
+def rand_masteries():
+    temp1 = randint(0,18)
+    temp2 = randint(0,18)
+    temp3 = randint(0,18)
+    masteries = [str(temp1), str(temp2), str(temp3)]
+    if temp1 + temp2 + temp3 == 30:
+        return masteries
+    else:
+        return rand_masteries()
+
+
+def rand_spells(spells, map_id):
+    if map_id == 12:
+        game_mode = 'ARAM'
+    elif map_id == 8:
+        game_mode = 'ODIN'
+    elif map_id == 10 or map_id == 11:
+        game_mode = 'CLASSIC'
+    else:
+        print "ERROR: invalid map_id: %s" % map_id
+        raise ValueError
+
+    sum_spells = []
+    list_spells = []
+    for key, value in spells['data'].iteritems():
+        name = value.get('name')
+        modes = value.get('modes')
+        if game_mode in modes:
+            list_spells.append(name)
+
+    while len(sum_spells) < 2:
+        temp = randint(0,len(list_spells)-1)
+        if list_spells[temp] not in sum_spells:
+            sum_spells.append(list_spells[temp])
+
+    return sum_spells
+
+
+def is_boot(value):
+    if value.get('tags') is not None and 'Boots' in value.get('tags') and value.get('name') is not 'Boots of Speed':
+        return True
+    else:
+        return False
+
+
+def is_enchant(value):
+    if value.get('group') is not None and value.get('group').startswith('Boots'):
+        return True
+    else:
+        return False
+
+
+def is_valid_item(value):
+    if not is_boot(value) and not is_enchant(value):
+        if value.get('into') is None and value.get('consumed') is None and value.get('requiredChampion') is None:
+            if value.get('tags') is not None and 'Lane' not in value.get('tags') and 'Jungle' not in value.get('tags') \
+                    and 'Consumable' not in value.get('tags') and 'Trinket' not in value.get('tags'):
+                return True
+            else:
+                return False
+
+
+def get_boots(item_list, map_id):
+    boots_list = []
+    enchants_list = []
+
+    for key, value in item_list['data'].iteritems():
+        if value.get('maps').get(str(map_id)):
+            if is_boot(value):
+                boots_list.append(value.get('name'))
+            elif is_enchant(value):
+                enchants_list.append(value.get('name'))
+
+    boots = [boots_list[randint(0,len(boots_list)-1)], enchants_list[randint(0,len(enchants_list)-1)]]
+    return boots
+
+
+def create_build(item_list, map_id):
+    champ = rand_champ(Champs)
+    sum_spells = rand_spells(Spells,map_id)
+    masteries = rand_masteries()
+    boots = get_boots(item_list, map_id)
+    items_list = []
+
+    for key, value in item_list['data'].iteritems():
+        if value.get('maps').get(str(map_id)):
+            if is_valid_item(value):
+                items_list.append(value.get('name'))
+
+    build_items = [boots]
+    while len(build_items) < 6:
+        item = items_list[randint(0,len(items_list)-1)]
+        if item not in build_items:
+            build_items.append(item)
+
+    bravery_build = {'champ': champ, 'masteries': masteries, 'sum_spells': sum_spells, 'build': build_items}
+    return bravery_build
+
+
+def ultimate_bravery(map_id):
+    build = create_build(Items, map_id)
+    champ = build.get('champ')
+    masteries = '%s, %s, %s' % (build.get('masteries')[0], build.get('masteries')[1], build.get('masteries')[2])
+    sum_spells = '%s / %s' % (build.get('sum_spells')[0], build.get('sum_spells')[1])
+    pretty_items = '%s - %s, %s, %s, %s, %s, %s' % \
+                   (build.get('build')[0][0], build.get('build')[0][1], build.get('build')[1], build.get('build')[2],
+                    build.get('build')[3], build.get('build')[4], build.get('build')[5],)
+    abilities = ['Q', 'W', 'E']
+
+    bravery = '%s (%s / max %s) (%s)\nBuild Order: %s' % \
+             (champ, sum_spells, abilities[randint(0,2)], masteries, pretty_items)
+
+    return bravery
