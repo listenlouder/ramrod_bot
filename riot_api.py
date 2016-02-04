@@ -5,9 +5,7 @@ from random import randint
 
 w = RiotWatcher('api_key')
 
-# Static champion data from riot.
-with open('Resources/champions.json') as data_file:
-    Champs = json.load(data_file)
+Champs = w.static_get_champion_list()
 
 
 def get_summonerId_from_name(summonerName):
@@ -152,13 +150,11 @@ def get_match_ranks(summonerName):
 # Start of Ultimate Bravery
 ######################################################################
 
-# structure: {player_name: { champ: 'champ', masteries: [masteries], spells: [spells], items: [items]}
+# structure: {player_name: { champ: 'champ', masteries: [masteries], spells: [spells], items: [items], cost: cost}
 
-with open('Resources/items.json') as data_file2:
-    Items = json.load(data_file2)
+Items = w.static_get_item_list(item_list_data='consumed,gold,groups,into,maps,tags,requiredChampion')
 
-with open('Resources/summoner_spells.json') as data_file3:
-    Spells = json.load(data_file3)
+Spells = w.static_get_summoner_spell_list(spell_data='modes')
 
 
 def rand_champ(champ_data):
@@ -237,19 +233,26 @@ def is_valid_item(value):
 def get_boots(item_list, map_id):
     boots_list = []
     enchants_list = []
-
     for key, value in item_list['data'].iteritems():
         if value.get('maps').get(str(map_id)):
             if is_boot(value):
-                boots_list.append(value.get('name'))
+                boots_list.append([value['name'], value['gold']['total']])
             elif is_enchant(value):
-                enchants_list.append(value.get('name'))
+                enchants_list.append([value['name'], value['gold']['total']])
 
     boots = [boots_list[randint(0,len(boots_list)-1)], enchants_list[randint(0,len(enchants_list)-1)]]
     return boots
 
 
+def sep_boot_cost(boots):
+    boots_name = [boots[0][0], boots[1][0]]
+    boots_cost = boots[0][1] + boots[1][1]
+
+    return [boots_name, boots_cost]
+
+
 def create_build(item_list, map_id):
+    cost = 0
     champ = rand_champ(Champs)
     sum_spells = rand_spells(Spells,map_id)
     masteries = rand_masteries()
@@ -259,15 +262,26 @@ def create_build(item_list, map_id):
     for key, value in item_list['data'].iteritems():
         if value.get('maps').get(str(map_id)):
             if is_valid_item(value):
-                items_list.append(value.get('name'))
+                items_list.append([value['name'], value['gold']['total'], value.get('group')])
+    # Janky way of getting the cost of the boots
+    new_boots = sep_boot_cost(boots)
+    build_items = [new_boots[0]]
+    cost += new_boots[1]
 
-    build_items = [boots]
+    allow_gold_items = True
     while len(build_items) < 6:
         item = items_list[randint(0,len(items_list)-1)]
-        if item not in build_items:
-            build_items.append(item)
+        if item[0] not in build_items:
+            if item[2] == 'GoldBase':
+                if allow_gold_items:
+                    build_items.append(item[0])
+                    allow_gold_items = False
+                    cost += item[1]
+            else:
+                build_items.append(item[0])
+                cost += item[1]
 
-    bravery_build = {'champ': champ, 'masteries': masteries, 'sum_spells': sum_spells, 'build': build_items}
+    bravery_build = {'champ': champ, 'masteries': masteries, 'sum_spells': sum_spells, 'build': build_items, 'cost': cost}
     return bravery_build
 
 
@@ -279,9 +293,10 @@ def ultimate_bravery(map_id):
     pretty_items = '%s - %s, %s, %s, %s, %s, %s' % \
                    (build.get('build')[0][0], build.get('build')[0][1], build.get('build')[1], build.get('build')[2],
                     build.get('build')[3], build.get('build')[4], build.get('build')[5],)
+    cost = build['cost']
     abilities = ['Q', 'W', 'E']
 
-    bravery = '%s (%s / max %s) (%s)\nBuild Order: %s' % \
-             (champ, sum_spells, abilities[randint(0,2)], masteries, pretty_items)
+    bravery = '%s (%s / max %s) (%s)\nBuild Order: %s\nTotal Gold: %s' % \
+             (champ, sum_spells, abilities[randint(0,2)], masteries, pretty_items, cost)
 
     return bravery
