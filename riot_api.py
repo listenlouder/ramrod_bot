@@ -219,7 +219,7 @@ def is_enchant(value):
     else:
         return False
 
-
+# Checks if an item is valid
 def is_valid_item(value):
     if not is_boot(value) and not is_enchant(value):
         if value.get('into') is None and value.get('consumed') is None and value.get('requiredChampion') is None:
