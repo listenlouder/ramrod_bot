@@ -63,11 +63,11 @@ def on_message(message):
     if message.content.startswith('!bravery'):
         build = None
         map = message.content[9:]
-        if map == '' or map == "Summoner's Rift":
+        if map == '' or map == "Summoner's Rift" or map == 'SR':
             build = rito.ultimate_bravery(11)
-        elif map == 'Twisted Treeline':
+        elif map == 'Twisted Treeline' or map == 'TT':
             build = rito.ultimate_bravery(10)
-        elif map == 'Howling Abyss':
+        elif map == 'Howling Abyss' or map == 'HA' or map == 'ARAM':
             build = rito.ultimate_bravery(12)
         else:
             client.send_message(message.channel, "Please specify map: Summoner's Rift, Twisted Treeline, or Howling Abyss")
