@@ -207,7 +207,7 @@ def rand_spells(spells, map_id):
 
 
 def is_boot(value):
-    if value.get('tags') is not None and 'Boots' in value.get('tags') and value.get('name') is not 'Boots of Speed':
+    if value.get('tags') is not None and 'Boots' in value.get('tags') and 'Boots of Speed' not in value.get('name'):
         return True
     else:
         return False
