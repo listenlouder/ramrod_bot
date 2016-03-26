@@ -98,7 +98,7 @@ def on_member_update(before, after):
     new_game = after.game
     # Announces when someone comes online or starts playing a game
     if old_status != new_status:
-        if new_status == 'online' and old_status != 'idle':
+        if new_status == 'online' or new_status == 'offline' and old_status != 'idle':
             client.send_message(after.server.channels[0], '%s is now %s' % (after.name, new_status))
     elif old_game != new_game:
         if new_game is not None:
