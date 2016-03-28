@@ -4,14 +4,23 @@ import random
 from giphypop import screensaver
 import logging
 import cleverbot
-
+import json
 
 logging.basicConfig(level=logging.INFO)
 
 cb1 = cleverbot.Cleverbot()
 
 client = discord.Client()
-client.login('email', 'password')
+json_info = json.load(open('auth.json'))
+
+try:
+    email = json_info['discord_email']
+    password = json_info['discord_password']
+except KeyError:
+    print 'Auth info not found'
+    exit()
+
+client.login(email, password)
 
 
 @client.event
@@ -72,7 +81,8 @@ def on_message(message):
         else:
             client.send_message(message.channel, "Please specify map: Summoner's Rift, Twisted Treeline, or Howling Abyss")
         if build is not None:
-            client.send_message(message.channel, '{}: {}'.format(message.author, build))
+            client.send_message(message.author, '{}: {}'.format(message.author, build))
+            client.send_message(message.channel, 'Check your PMs {}!'.format(message.author.mention()))
 
     # Need to find a way to auto update this as new methods are added
     if message.content.startswith('!help'):

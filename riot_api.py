@@ -3,8 +3,14 @@ from riotwatcher import RiotWatcher
 import json
 from random import randint
 
-w = RiotWatcher('api_key')
+json_info = json.load(open('auth.json'))
+try:
+    api_key = json_info['riot_api_key']
+except KeyError:
+    print 'Auth info not found'
+    exit()
 
+w = RiotWatcher(api_key)
 Champs = w.static_get_champion_list()
 
 
@@ -152,11 +158,6 @@ def get_match_ranks(summonerName):
 
 # structure: {player_name: { champ: 'champ', masteries: [masteries], spells: [spells], items: [items], cost: cost}
 
-Items = w.static_get_item_list(item_list_data='consumed,gold,groups,into,maps,tags,requiredChampion')
-
-Spells = w.static_get_summoner_spell_list(spell_data='modes')
-
-
 def rand_champ(champ_data):
     champ_list = champ_data['data']
     names = []
@@ -252,9 +253,11 @@ def sep_boot_cost(boots):
 
 
 def create_build(item_list, map_id):
+    spells = w.static_get_summoner_spell_list(spell_data='modes')
+
     cost = 0
     champ = rand_champ(Champs)
-    sum_spells = rand_spells(Spells,map_id)
+    sum_spells = rand_spells(spells, map_id)
     masteries = rand_masteries()
     boots = get_boots(item_list, map_id)
     items_list = []
@@ -286,7 +289,8 @@ def create_build(item_list, map_id):
 
 
 def ultimate_bravery(map_id):
-    build = create_build(Items, map_id)
+    items = w.static_get_item_list(item_list_data='consumed,gold,groups,into,maps,tags,requiredChampion')
+    build = create_build(items, map_id)
     champ = build.get('champ')
     masteries = '%s, %s, %s' % (build.get('masteries')[0], build.get('masteries')[1], build.get('masteries')[2])
     sum_spells = '%s / %s' % (build.get('sum_spells')[0], build.get('sum_spells')[1])
