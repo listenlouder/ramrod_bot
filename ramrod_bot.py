@@ -5,10 +5,11 @@ from giphypop import screensaver
 import logging
 import cleverbot
 import json
+import utils
 
 logging.basicConfig(level=logging.INFO)
 
-cb1 = cleverbot.Cleverbot()
+utils.check_auth()
 
 client = discord.Client()
 json_info = json.load(open('auth.json'))
@@ -18,10 +19,10 @@ try:
     password = json_info['discord_password']
 except KeyError:
     print 'Auth info not found'
-    exit()
 
 client.login(email, password)
 
+cb1 = cleverbot.Cleverbot()
 
 @client.event
 def on_message(message):
