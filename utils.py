@@ -20,6 +20,7 @@ def build_auth_file():
 def check_auth():
     try:
         temp = open('auth.json', 'r')
+        temp.close()
     except IOError:
         print 'Auth file not found'
         build_auth_file()

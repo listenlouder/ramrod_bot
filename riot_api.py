@@ -2,10 +2,6 @@ import riotwatcher
 from riotwatcher import RiotWatcher
 import json
 from random import randint
-import utils
-
-
-utils.check_auth()
 
 json_info = json.load(open('auth.json'))
 try:
@@ -15,7 +11,6 @@ except KeyError:
     exit()
 
 w = RiotWatcher(api_key)
-Champs = w.static_get_champion_list()
 
 
 def get_summonerId_from_name(summonerName):
@@ -258,9 +253,10 @@ def sep_boot_cost(boots):
 
 def create_build(item_list, map_id):
     spells = w.static_get_summoner_spell_list(spell_data='modes')
+    champs = w.static_get_champion_list()
 
     cost = 0
-    champ = rand_champ(Champs)
+    champ = rand_champ(champs)
     sum_spells = rand_spells(spells, map_id)
     masteries = rand_masteries()
     boots = get_boots(item_list, map_id)
