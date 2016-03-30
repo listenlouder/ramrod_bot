@@ -2,6 +2,10 @@ import riotwatcher
 from riotwatcher import RiotWatcher
 import json
 from random import randint
+import utils
+
+
+utils.check_auth()
 
 json_info = json.load(open('auth.json'))
 try:
