@@ -38,6 +38,7 @@ def get_champion(champ_id, champ_data):
 def get_match_players(summonerId):
     print "Getting current match..."
     current_match = w.get_current_game(summonerId)
+    champs = w.static_get_champion_list()
     players = []
 
     for item in current_match['participants']:
@@ -47,7 +48,7 @@ def get_match_players(summonerId):
             teamId = item.get('teamId')
         if item.get('championId') is not None:
             champId = item.get('championId')
-            champ_name = get_champion(champId, Champs)
+            champ_name = get_champion(champId, champs)
         players.append([playerId, teamId, champ_name])
 
     return players
