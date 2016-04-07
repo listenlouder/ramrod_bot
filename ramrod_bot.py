@@ -34,7 +34,7 @@ def on_message(message):
         client.send_message(message.channel, 'Hello {}!'.format(message.author.mention()))
 
     # hehe
-    if message.content.startswith('is Will awesome?'):
+    if message.content.contains('is Will awesome?'):
         client.send_message(message.channel, 'Of course he is {}!'.format(message.author.mention()))
 
     # LoLNexus lite in chat
